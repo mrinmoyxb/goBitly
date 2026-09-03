@@ -19,6 +19,7 @@ func main() {
 	if err != nil {
 		log.Fatal("error from postgres db connection: ", err)
 	}
+
 	defer pool.Close()
 	log.Println("✅ postgres connected successfully")
 

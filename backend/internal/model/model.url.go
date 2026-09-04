@@ -10,3 +10,11 @@ type URL struct {
 	ExpiresAt   *time.Time `json:"expires_at,omitempty"`
 	ClickCount  int64      `json:"clicks_count"`
 }
+
+type ClickCount struct {
+	ClickCount int64 `json:"clicks_count"`
+}
+
+type ShortURLExists struct {
+	ShortURL bool `json:"short_url"`
+}

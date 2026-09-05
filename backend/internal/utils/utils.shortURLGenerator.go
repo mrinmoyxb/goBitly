@@ -19,10 +19,3 @@ func ShortURLGenerator(length int64) string {
 	return builder.String()
 }
 
-//  CONSTRAINT "urls_user_constraint"
-
-//         FOREIGN KEY (user_id)
-
-//         REFERENCES users(id)
-
-//         ON DELETE CASCADE

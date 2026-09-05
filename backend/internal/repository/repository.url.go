@@ -64,7 +64,7 @@ func (r *URLRepository) GetURLByLongURLRepo(ctx context.Context, longURL string)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, errors.New("ErrURLNotFound")
+			return nil, errors.New("url not found")
 		}
 		return nil, fmt.Errorf("failed to get url: %w", err)
 	}
@@ -91,7 +91,7 @@ func (r *URLRepository) ExistsShortURLRepo(ctx context.Context, shortURL string)
 // delete URL
 func (r *URLRepository) DeleteURLRepo(ctx context.Context, shortURL string) (bool, error) {
 	cmdTag, err := r.db.Exec(ctx, `
-	DELETE FROM urls WHERE short_url = $1
+		DELETE FROM urls WHERE short_url = $1
 	`, shortURL)
 
 	if err != nil {

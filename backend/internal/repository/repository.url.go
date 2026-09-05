@@ -10,18 +10,18 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type URLRepository struct {
+type PostgresURLRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewURLRepository(db *pgxpool.Pool) *URLRepository {
-	return &URLRepository{
+func NewURLRepository(db *pgxpool.Pool) *PostgresURLRepository {
+	return &PostgresURLRepository{
 		db: db,
 	}
 }
 
 // create URL
-func (r *URLRepository) CreateURLRepo(ctx context.Context, shortURL string, originalURL string) (*model.URL, error) {
+func (r *PostgresURLRepository) CreateURLRepo(ctx context.Context, shortURL string, originalURL string) (*model.URL, error) {
 	var urlModel model.URL
 
 	err := r.db.QueryRow(ctx, `
@@ -37,7 +37,7 @@ func (r *URLRepository) CreateURLRepo(ctx context.Context, shortURL string, orig
 }
 
 // get URL
-func (r *URLRepository) GetURLByShortURLRepo(ctx context.Context, shortURL string) (*model.URL, error) {
+func (r *PostgresURLRepository) GetURLByShortURLRepo(ctx context.Context, shortURL string) (*model.URL, error) {
 	var urlModel model.URL
 
 	err := r.db.QueryRow(ctx, `
@@ -53,7 +53,7 @@ func (r *URLRepository) GetURLByShortURLRepo(ctx context.Context, shortURL strin
 }
 
 // get URL by original URL
-func (r *URLRepository) GetURLByLongURLRepo(ctx context.Context, longURL string) (*model.URL, error) {
+func (r *PostgresURLRepository) GetURLByLongURLRepo(ctx context.Context, longURL string) (*model.URL, error) {
 	var urlModel model.URL
 
 	err := r.db.QueryRow(ctx, `
@@ -73,7 +73,7 @@ func (r *URLRepository) GetURLByLongURLRepo(ctx context.Context, longURL string)
 }
 
 // get URL by short url
-func (r *URLRepository) ExistsShortURLRepo(ctx context.Context, shortURL string) (bool, error) {
+func (r *PostgresURLRepository) ExistsShortURLRepo(ctx context.Context, shortURL string) (bool, error) {
 	var exists bool
 
 	err := r.db.QueryRow(ctx, `
@@ -89,7 +89,7 @@ func (r *URLRepository) ExistsShortURLRepo(ctx context.Context, shortURL string)
 }
 
 // delete URL
-func (r *URLRepository) DeleteURLRepo(ctx context.Context, shortURL string) (bool, error) {
+func (r *PostgresURLRepository) DeleteURLRepo(ctx context.Context, shortURL string) (bool, error) {
 	cmdTag, err := r.db.Exec(ctx, `
 		DELETE FROM urls WHERE short_url = $1
 	`, shortURL)
@@ -106,7 +106,7 @@ func (r *URLRepository) DeleteURLRepo(ctx context.Context, shortURL string) (boo
 }
 
 // increment count
-func (r *URLRepository) IncrementClickCountsRespo(ctx context.Context, shortURL string) (bool, error) {
+func (r *PostgresURLRepository) IncrementClickCountRepo(ctx context.Context, shortURL string) (bool, error) {
 	cmdTag, err := r.db.Exec(ctx, `
 		UPDATE urls SET clicks_count = clicks_count + 1 
 		WHERE short_url = $1
@@ -124,7 +124,7 @@ func (r *URLRepository) IncrementClickCountsRespo(ctx context.Context, shortURL 
 }
 
 // clicks count
-func (r *URLRepository) GetClickCountsRepo(ctx context.Context, shortURL string) (int64, error) {
+func (r *PostgresURLRepository) GetClickCountRepo(ctx context.Context, shortURL string) (int64, error) {
 	var ClickCountModel model.ClickCount
 
 	err := r.db.QueryRow(ctx, `

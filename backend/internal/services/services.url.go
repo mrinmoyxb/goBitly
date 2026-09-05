@@ -6,25 +6,21 @@ import (
 	"goBitly/internal/model"
 	"goBitly/internal/repository"
 	"goBitly/internal/utils"
-
-	"github.com/jackc/pgx/v5"
 )
 
+var ErrURLNotFound = errors.New("URL not found")
+
 type URLService struct {
-	repo *repository.URLRepository
+	repo repository.URLRepository
 }
 
-func NewURLService(repo *repository.URLRepository) *URLService {
+func NewURLService(repo repository.URLRepository) *URLService {
 	return &URLService{
 		repo: repo,
 	}
 }
 
 func (url *URLService) CreateShortURLService(ctx context.Context, originalURL string) (*model.URL, error) {
-	if originalURL == ""{
-		return nil, errors.New("url can't be empty")
-	}
-	
 	if !utils.IsURLValidUtil(originalURL) {
 		return nil, errors.New("invalid URL")
 	}
@@ -35,7 +31,7 @@ func (url *URLService) CreateShortURLService(ctx context.Context, originalURL st
 	}
 
 	existingURL, err := url.repo.GetURLByLongURLRepo(ctx, normalizedURL)
-	if err != nil && !errors.Is(err, pgx.ErrNoRows){
+	if err != nil && !errors.Is(err, ErrURLNotFound){
 		return nil, err
 	}
 	if existingURL != nil {
@@ -43,19 +39,10 @@ func (url *URLService) CreateShortURLService(ctx context.Context, originalURL st
 	}
 
 	shortURL := utils.ShortURLGenerator(5)
-	urlModel, err := url.repo.CreateURLRepo(ctx, shortURL, normalizedURL)
-	if err != nil {
-		return nil, err
-	}
-
-	return urlModel, nil
+	return url.repo.CreateURLRepo(ctx, shortURL, normalizedURL)
 }
 
 func (url *URLService) GetURLByShortURLService(ctx context.Context, shortURL string) (*model.URL, error){
-	if shortURL == "" {
-		return nil, errors.New("short URL can't be empty")
-	}
-
 	existingURL, err := url.repo.GetURLByShortURLRepo(ctx, shortURL)
 	if err != nil {
 		return nil, err
@@ -75,7 +62,7 @@ func (url *URLService) GetURLByOriginalURLService(ctx context.Context, originalU
 	}
 	
 	existingURL, err := url.repo.GetURLByLongURLRepo(ctx, normalizedURL)
-	if err != nil && !errors.Is(err, pgx.ErrNoRows){
+	if err != nil && !errors.Is(err, ErrURLNotFound){
 		return nil, err
 	}
 	if existingURL != nil {
@@ -90,32 +77,23 @@ func (url *URLService) DeleteURLService(ctx context.Context, shortURL string) (b
 	if err != nil {
 		return false, err
 	}
-	if !success {
-		return false, nil
-	}
 
-	return true, nil
+	return success, nil
 }
 
 func (url *URLService) IncrementClickCountService(ctx context.Context, shortURL string) (bool, error) {
-	success, err := url.repo.IncrementClickCountsRespo(ctx, shortURL)
+	success, err := url.repo.IncrementClickCountRepo(ctx, shortURL)
 	if err != nil {
 		return false, err
 	}
-	if !success {
-		return false, nil
-	}
 
-	return true, nil
+	return success, nil
 }
 
 func (url* URLService) GetClickCountsService(ctx context.Context, shortURL string) (int64, error) {
-	count, err := url.repo.GetClickCountsRepo(ctx, shortURL)
+	count, err := url.repo.GetClickCountRepo(ctx, shortURL)
 	if err != nil {
-		return -1, err
-	}
-	if count <=1 {
-		return -1, nil
+		return 0, err
 	}
 
 	return count, nil

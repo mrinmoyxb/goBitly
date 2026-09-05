@@ -33,3 +33,19 @@ func IsURLValidUtil(originalURL string) bool {
 
 	return true
 }
+
+func NormalizeURLUtil(originalURL string) (string, error) {
+	u, err := url.Parse(originalURL)
+	if err != nil {
+		return "", err
+	}
+
+	u.Scheme = strings.ToLower(u.Scheme)
+	u.Host = strings.ToLower(u.Host)
+
+	if u.Path == "/" {
+		u.Path = ""
+	}
+
+	return u.String(), nil
+}

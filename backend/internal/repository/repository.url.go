@@ -2,8 +2,12 @@ package repository
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"errors"
+	"fmt"
 	"goBitly/internal/model"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type URLRepository struct {
@@ -57,8 +61,12 @@ func (r *URLRepository) GetURLByLongURLRepo(ctx context.Context, longURL string)
 		FROM urls
 		WHERE original_url = $1
 	`, longURL).Scan(&urlModel.ID, &urlModel.ShortURL, &urlModel.OriginalURL, &urlModel.CreatedAt, &urlModel.ExpiresAt, &urlModel.ClickCount)
+
 	if err != nil {
-		return nil, err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, errors.New("ErrURLNotFound")
+		}
+		return nil, fmt.Errorf("failed to get url: %w", err)
 	}
 
 	return &urlModel, nil

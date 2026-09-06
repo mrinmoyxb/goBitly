@@ -18,4 +18,3 @@ func ShortURLGenerator(length int64) string {
 
 	return builder.String()
 }
-

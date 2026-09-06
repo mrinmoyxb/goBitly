@@ -1,9 +1,12 @@
 package main
 
 import (
-	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
 	"goBitly/internal/database"
+	"goBitly/internal/handler"
+	"goBitly/internal/repository"
+	"goBitly/internal/router"
+	"goBitly/internal/services"
 	"log"
 	"net/http"
 	"os"
@@ -23,15 +26,18 @@ func main() {
 	defer pool.Close()
 	log.Println("✅ postgres connected successfully")
 
-	app := chi.NewRouter()
 	PORT := os.Getenv("PORT")
-
 	if PORT == "" {
 		log.Fatal("unable to find PORT")
 	}
 
+	urlRepository := repository.NewURLRepository(pool)
+	urlService := services.NewURLService(urlRepository)
+	urlHandler := handler.NewURLHandler(urlService)
+	app := router.SetUpRouter(urlHandler)
+
 	address := ":" + PORT
-	log.Printf("server is running on PORT: %s", PORT)
+	log.Printf("✅ server is running on PORT: %s", PORT)
 	if err := http.ListenAndServe(address, app); err != nil {
 		log.Fatalf("server failed to start: %v\n", err)
 	}

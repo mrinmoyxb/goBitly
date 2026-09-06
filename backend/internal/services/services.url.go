@@ -31,7 +31,7 @@ func (url *URLService) CreateShortURLService(ctx context.Context, originalURL st
 	}
 
 	existingURL, err := url.repo.GetURLByLongURLRepo(ctx, normalizedURL)
-	if err != nil && !errors.Is(err, ErrURLNotFound){
+	if err != nil && !errors.Is(err, ErrURLNotFound) {
 		return nil, err
 	}
 	if existingURL != nil {
@@ -42,16 +42,16 @@ func (url *URLService) CreateShortURLService(ctx context.Context, originalURL st
 	return url.repo.CreateURLRepo(ctx, shortURL, normalizedURL)
 }
 
-func (url *URLService) GetURLByShortURLService(ctx context.Context, shortURL string) (*model.URL, error){
+func (url *URLService) GetURLByShortURLService(ctx context.Context, shortURL string) (*model.URL, error) {
 	existingURL, err := url.repo.GetURLByShortURLRepo(ctx, shortURL)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return existingURL, nil
 }
 
-func (url *URLService) GetURLByOriginalURLService(ctx context.Context, originalURL string) (*model.URL, error){
+func (url *URLService) GetURLByOriginalURLService(ctx context.Context, originalURL string) (*model.URL, error) {
 	if !utils.IsURLValidUtil(originalURL) {
 		return nil, errors.New("invalid URL")
 	}
@@ -60,15 +60,15 @@ func (url *URLService) GetURLByOriginalURLService(ctx context.Context, originalU
 	if err != nil {
 		return nil, err
 	}
-	
+
 	existingURL, err := url.repo.GetURLByLongURLRepo(ctx, normalizedURL)
-	if err != nil && !errors.Is(err, ErrURLNotFound){
+	if err != nil && !errors.Is(err, ErrURLNotFound) {
 		return nil, err
 	}
 	if existingURL != nil {
 		return existingURL, nil
 	}
-	
+
 	return nil, err
 }
 
@@ -90,7 +90,7 @@ func (url *URLService) IncrementClickCountService(ctx context.Context, shortURL 
 	return success, nil
 }
 
-func (url* URLService) GetClickCountsService(ctx context.Context, shortURL string) (int64, error) {
+func (url *URLService) GetClickCountsService(ctx context.Context, shortURL string) (int64, error) {
 	count, err := url.repo.GetClickCountRepo(ctx, shortURL)
 	if err != nil {
 		return 0, err
@@ -98,4 +98,3 @@ func (url* URLService) GetClickCountsService(ctx context.Context, shortURL strin
 
 	return count, nil
 }
-

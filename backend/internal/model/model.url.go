@@ -19,3 +19,11 @@ type ClickCount struct {
 type ShortURLExists struct {
 	ShortURL bool `json:"short_url"`
 }
+
+type OriginalURLRequest struct {
+	OriginalURL string `json:"original_url"`
+}
+
+type ShortURLRequest struct {
+	ShortURL string `json:"short_url"`
+}

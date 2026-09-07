@@ -3,11 +3,11 @@ package repository
 import (
 	"context"
 	"errors"
-	"fmt"
 	"goBitly/internal/apperrors"
 	"goBitly/internal/model"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"fmt"
 )
 
 type PostgresURLRepository struct {
@@ -41,10 +41,10 @@ func (r *PostgresURLRepository) GetURLByShortURLRepo(ctx context.Context, shortU
 	var urlModel model.URL
 
 	err := r.db.QueryRow(ctx, `
-		SELECT id, short_url, original_url, created_at, expires_at, clicks_count
+		SELECT id, user_id, short_url, original_url, created_at, expires_at, clicks_count
 		FROM urls
 		WHERE short_url = $1
-	`, shortURL).Scan(&urlModel.ID, &urlModel.ShortURL, &urlModel.OriginalURL, &urlModel.CreatedAt, &urlModel.ExpiresAt, &urlModel.ClickCount)
+	`, shortURL).Scan(&urlModel.ID, &urlModel.UserID, &urlModel.ShortURL, &urlModel.OriginalURL, &urlModel.CreatedAt, &urlModel.ExpiresAt, &urlModel.ClickCount)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,6 @@ func (r *PostgresURLRepository) GetURLByLongURLRepo(ctx context.Context, longURL
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			fmt.Println("Response from DB: ", err)
 			return nil, apperrors.ErrURLNotFound
 		}
 		return nil, fmt.Errorf("failed to get url: %w", err)

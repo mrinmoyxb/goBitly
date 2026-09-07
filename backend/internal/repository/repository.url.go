@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"goBitly/internal/apperrors"
 	"goBitly/internal/model"
-
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -21,14 +21,14 @@ func NewURLRepository(db *pgxpool.Pool) *PostgresURLRepository {
 }
 
 // create URL
-func (r *PostgresURLRepository) CreateURLRepo(ctx context.Context, shortURL string, originalURL string) (*model.URL, error) {
+func (r *PostgresURLRepository) CreateURLRepo(ctx context.Context, userId int64, shortURL string, originalURL string) (*model.URL, error) {
 	var urlModel model.URL
 
 	err := r.db.QueryRow(ctx, `
-		INSERT INTO urls (short_url, original_url)
-		VALUES ($1, $2)
+		INSERT INTO urls (user_id, short_url, original_url)
+		VALUES ($1, $2, $3)
 		RETURNING id, short_url, original_url, created_at, expires_at, clicks_count
-	`, shortURL, originalURL).Scan(&urlModel.ID, &urlModel.ShortURL, &urlModel.OriginalURL, &urlModel.CreatedAt, &urlModel.ExpiresAt, &urlModel.ClickCount)
+	`, userId, shortURL, originalURL).Scan(&urlModel.ID, &urlModel.UserID, &urlModel.ShortURL, &urlModel.OriginalURL, &urlModel.CreatedAt, &urlModel.ExpiresAt, &urlModel.ClickCount)
 	if err != nil {
 		return nil, err
 	}
@@ -57,18 +57,19 @@ func (r *PostgresURLRepository) GetURLByLongURLRepo(ctx context.Context, longURL
 	var urlModel model.URL
 
 	err := r.db.QueryRow(ctx, `
-		SELECT id, short_url, original_url, created_at, expires_at, clicks_count
+		SELECT id, user_id, short_url, original_url, created_at, expires_at, clicks_count
 		FROM urls
 		WHERE original_url = $1
-	`, longURL).Scan(&urlModel.ID, &urlModel.ShortURL, &urlModel.OriginalURL, &urlModel.CreatedAt, &urlModel.ExpiresAt, &urlModel.ClickCount)
+	`, longURL).Scan(&urlModel.ID, &urlModel.UserID, &urlModel.ShortURL, &urlModel.OriginalURL, &urlModel.CreatedAt, &urlModel.ExpiresAt, &urlModel.ClickCount)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, errors.New("url not found")
+			fmt.Println("Response from DB: ", err)
+			return nil, apperrors.ErrURLNotFound
 		}
 		return nil, fmt.Errorf("failed to get url: %w", err)
 	}
-
+	
 	return &urlModel, nil
 }
 

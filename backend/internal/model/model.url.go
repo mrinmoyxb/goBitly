@@ -20,6 +20,11 @@ type ShortURLExists struct {
 	ShortURL bool `json:"short_url"`
 }
 
+type CreateShortURLRequest struct {
+	UserId int64 `json:"user_id"`
+	OriginalURL string `json:"original_url"`
+}
+
 type OriginalURLRequest struct {
 	OriginalURL string `json:"original_url"`
 }

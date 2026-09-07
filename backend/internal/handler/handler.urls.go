@@ -5,7 +5,6 @@ import (
 	"goBitly/internal/model"
 	"goBitly/internal/services"
 	"net/http"
-
 	"github.com/go-chi/chi/v5"
 )
 
@@ -27,19 +26,23 @@ func (handler *URLHandler) CheckHealth(w http.ResponseWriter, r *http.Request){
 }
 
 func (handler *URLHandler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
-	var req model.OriginalURLRequest
+	var req model.CreateShortURLRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
+	if req.UserId == 0 {
+		http.Error(w, "user id is required", http.StatusBadRequest)
+		return
+	}
 	if req.OriginalURL == "" {
 		http.Error(w, "original url is required", http.StatusBadRequest)
 		return
 	}
 
-	url, err := handler.service.CreateShortURLService(r.Context(), req.OriginalURL)
+	url, err := handler.service.CreateShortURLService(r.Context(), req.UserId, req.OriginalURL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

@@ -3,12 +3,11 @@ package services
 import (
 	"context"
 	"errors"
+	"goBitly/internal/apperrors"
 	"goBitly/internal/model"
 	"goBitly/internal/repository"
 	"goBitly/internal/utils"
 )
-
-var ErrURLNotFound = errors.New("URL not found")
 
 type URLService struct {
 	repo repository.URLRepository
@@ -20,7 +19,7 @@ func NewURLService(repo repository.URLRepository) *URLService {
 	}
 }
 
-func (url *URLService) CreateShortURLService(ctx context.Context, originalURL string) (*model.URL, error) {
+func (url *URLService) CreateShortURLService(ctx context.Context, userId int64, originalURL string) (*model.URL, error) {
 	if !utils.IsURLValidUtil(originalURL) {
 		return nil, errors.New("invalid URL")
 	}
@@ -31,15 +30,16 @@ func (url *URLService) CreateShortURLService(ctx context.Context, originalURL st
 	}
 
 	existingURL, err := url.repo.GetURLByLongURLRepo(ctx, normalizedURL)
-	if err != nil && !errors.Is(err, ErrURLNotFound) {
+	if err != nil && !errors.Is(err, apperrors.ErrURLNotFound) {
 		return nil, err
 	}
+
 	if existingURL != nil {
 		return existingURL, nil
 	}
 
 	shortURL := utils.ShortURLGenerator(5)
-	return url.repo.CreateURLRepo(ctx, shortURL, normalizedURL)
+	return url.repo.CreateURLRepo(ctx, userId, shortURL, normalizedURL)
 }
 
 func (url *URLService) GetURLByShortURLService(ctx context.Context, shortURL string) (*model.URL, error) {
@@ -62,7 +62,7 @@ func (url *URLService) GetURLByOriginalURLService(ctx context.Context, originalU
 	}
 
 	existingURL, err := url.repo.GetURLByLongURLRepo(ctx, normalizedURL)
-	if err != nil && !errors.Is(err, ErrURLNotFound) {
+	if err != nil && !errors.Is(err, apperrors.ErrURLNotFound) {
 		return nil, err
 	}
 	if existingURL != nil {

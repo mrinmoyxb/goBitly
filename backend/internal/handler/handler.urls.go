@@ -146,8 +146,14 @@ func (handler *URLHandler) GetClickCountHandler(w http.ResponseWriter, r *http.R
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	
+	response := struct {
+		Count int64 `json:"count"`
+	}{
+		Count: count,
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(count)
+	json.NewEncoder(w).Encode(response)
 }

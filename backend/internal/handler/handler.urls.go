@@ -6,6 +6,7 @@ import (
 	"goBitly/internal/services"
 	"net/http"
 	"github.com/go-chi/chi/v5"
+	"fmt"
 )
 
 type URLHandler struct {
@@ -128,9 +129,15 @@ func (handler *URLHandler) DeleteURLHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	response := struct {
+		Success bool `json:"success"`
+	}{
+		Success: success,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(success)
+	json.NewEncoder(w).Encode(response)
 }
 
 func (handler *URLHandler) GetClickCountHandler(w http.ResponseWriter, r *http.Request) {

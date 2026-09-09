@@ -7,6 +7,7 @@ import (
 	"goBitly/internal/model"
 	"goBitly/internal/repository"
 	"goBitly/internal/utils"
+	"log"
 )
 
 type URLService struct {
@@ -37,14 +38,13 @@ func (url *URLService) CreateShortURLService(ctx context.Context, userId int64, 
 	if existingURL != nil {
 		return existingURL, nil
 	}
-
-	shortURL := utils.ShortURLGenerator(5)
-	return url.repo.CreateURLRepo(ctx, userId, shortURL, normalizedURL)
+	
+	return url.repo.CreateURLRepo(ctx, userId, normalizedURL)
 }
 
 func (url *URLService) GetURLByShortURLService(ctx context.Context, shortURL string) (*model.URL, error) {
 	existingURL, err := url.repo.GetURLByShortURLRepo(ctx, shortURL)
-	if err != nil {
+	if err != nil && !errors.Is(err, apperrors.ErrURLNotFound){
 		return nil, err
 	}
 
@@ -84,6 +84,7 @@ func (url *URLService) DeleteURLService(ctx context.Context, shortURL string) (b
 func (url *URLService) IncrementClickCountService(ctx context.Context, shortURL string) (bool, error) {
 	success, err := url.repo.IncrementClickCountRepo(ctx, shortURL)
 	if err != nil {
+		log.Println("Increment Clicks Failed")
 		return false, err
 	}
 

@@ -1,12 +1,13 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"goBitly/internal/model"
 	"goBitly/internal/services"
 	"net/http"
+	"log"
 	"github.com/go-chi/chi/v5"
-	"fmt"
 )
 
 type URLHandler struct {
@@ -83,17 +84,18 @@ func (handler *URLHandler) RedirectHandler(w http.ResponseWriter, r *http.Reques
 
 	url, err := handler.service.GetURLByShortURLService(r.Context(), shortURL)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
-
-	_, incErr := handler.service.IncrementClickCountService(r.Context(), shortURL)
-	if incErr != nil {
-		http.Error(w, incErr.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	http.Redirect(w, r, url.OriginalURL, http.StatusFound)
+
+	go func(){
+		ctx := context.Background()
+		if _, err := handler.service.IncrementClickCountService(ctx, url.ShortURL); err != nil {
+			log.Printf("failed to increment click count for %s: %v", shortURL, err)
+		}
+	}()
 }
 
 func (handler *URLHandler) GetByOriginalURLHandler(w http.ResponseWriter, r *http.Request) {

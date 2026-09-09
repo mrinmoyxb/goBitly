@@ -6,7 +6,7 @@ import (
 )
 
 type URLRepository interface {
-	CreateURLRepo(ctx context.Context, userId int64, shortURL string, originalURL string) (*model.URL, error)
+	CreateURLRepo(ctx context.Context, userId int64, originalURL string) (*model.URL, error)
 	GetURLByShortURLRepo(ctx context.Context, shortURL string) (*model.URL, error)
 	GetURLByLongURLRepo(ctx context.Context, originalURL string) (*model.URL, error)
 	DeleteURLRepo(ctx context.Context, shortURL string) (bool, error)

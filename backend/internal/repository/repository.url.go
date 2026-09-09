@@ -3,11 +3,13 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"goBitly/internal/apperrors"
 	"goBitly/internal/model"
+	"goBitly/internal/utils"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"fmt"
 )
 
 type PostgresURLRepository struct {
@@ -21,8 +23,16 @@ func NewURLRepository(db *pgxpool.Pool) *PostgresURLRepository {
 }
 
 // create URL
-func (r *PostgresURLRepository) CreateURLRepo(ctx context.Context, userId int64, shortURL string, originalURL string) (*model.URL, error) {
+func (r *PostgresURLRepository) CreateURLRepo(ctx context.Context, userId int64, originalURL string) (*model.URL, error) {
 	var urlModel model.URL
+	var nextID int64
+
+	errNextID := r.db.QueryRow(ctx, `SELECT nextval('urls_id_seq')`).Scan(&nextID)
+	if errNextID != nil {
+		return nil, apperrors.ErrNextIdNotFound
+	}
+
+	shortURL := utils.EncodeBase62(nextID)
 
 	err := r.db.QueryRow(ctx, `
 		INSERT INTO urls (user_id, short_url, original_url)

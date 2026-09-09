@@ -5,3 +5,4 @@ import (
 )
 
 var ErrURLNotFound = errors.New("url not found")
+var ErrNextIdNotFound = errors.New("next id not found in DB")

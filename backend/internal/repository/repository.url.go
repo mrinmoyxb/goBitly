@@ -37,7 +37,7 @@ func (r *PostgresURLRepository) CreateURLRepo(ctx context.Context, userId int64,
 	err := r.db.QueryRow(ctx, `
 		INSERT INTO urls (user_id, short_url, original_url)
 		VALUES ($1, $2, $3)
-		RETURNING id, short_url, original_url, created_at, expires_at, clicks_count
+		RETURNING id, user_id, short_url, original_url, created_at, expires_at, clicks_count
 	`, userId, shortURL, originalURL).Scan(&urlModel.ID, &urlModel.UserID, &urlModel.ShortURL, &urlModel.OriginalURL, &urlModel.CreatedAt, &urlModel.ExpiresAt, &urlModel.ClickCount)
 	if err != nil {
 		return nil, err
@@ -56,6 +56,9 @@ func (r *PostgresURLRepository) GetURLByShortURLRepo(ctx context.Context, shortU
 		WHERE short_url = $1
 	`, shortURL).Scan(&urlModel.ID, &urlModel.UserID, &urlModel.ShortURL, &urlModel.OriginalURL, &urlModel.CreatedAt, &urlModel.ExpiresAt, &urlModel.ClickCount)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apperrors.ErrURLNotFound
+		}
 		return nil, err
 	}
 
@@ -78,7 +81,7 @@ func (r *PostgresURLRepository) GetURLByLongURLRepo(ctx context.Context, longURL
 		}
 		return nil, fmt.Errorf("failed to get url: %w", err)
 	}
-	
+
 	return &urlModel, nil
 }
 

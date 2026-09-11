@@ -3,11 +3,12 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"github.com/go-chi/chi/v5"
+	"goBitly/internal/apperrors"
 	"goBitly/internal/model"
 	"goBitly/internal/services"
-	"net/http"
 	"log"
-	"github.com/go-chi/chi/v5"
+	"net/http"
 )
 
 type URLHandler struct {
@@ -20,7 +21,7 @@ func NewURLHandler(service *services.URLService) *URLHandler {
 	}
 }
 
-func (handler *URLHandler) CheckHealth(w http.ResponseWriter, r *http.Request){
+func (handler *URLHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 	msg := "hello from goBitly!!!"
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -46,7 +47,7 @@ func (handler *URLHandler) CreateShortURLHandler(w http.ResponseWriter, r *http.
 
 	url, err := handler.service.CreateShortURLService(r.Context(), req.UserId, req.OriginalURL)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		apperrors.WriteErrors(w, err)
 		return
 	}
 
@@ -57,7 +58,6 @@ func (handler *URLHandler) CreateShortURLHandler(w http.ResponseWriter, r *http.
 
 func (handler *URLHandler) GetByShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	shortURL := chi.URLParam(r, "shortURL")
-
 	if shortURL == "" {
 		http.Error(w, "short url is required", http.StatusBadRequest)
 		return
@@ -65,7 +65,7 @@ func (handler *URLHandler) GetByShortURLHandler(w http.ResponseWriter, r *http.R
 
 	url, err := handler.service.GetURLByShortURLService(r.Context(), shortURL)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		apperrors.WriteErrors(w, err)
 		return
 	}
 
@@ -76,7 +76,6 @@ func (handler *URLHandler) GetByShortURLHandler(w http.ResponseWriter, r *http.R
 
 func (handler *URLHandler) RedirectHandler(w http.ResponseWriter, r *http.Request) {
 	shortURL := chi.URLParam(r, "shortURL")
-
 	if shortURL == "" {
 		http.Error(w, "short url is required", http.StatusBadRequest)
 		return
@@ -84,13 +83,18 @@ func (handler *URLHandler) RedirectHandler(w http.ResponseWriter, r *http.Reques
 
 	url, err := handler.service.GetURLByShortURLService(r.Context(), shortURL)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		apperrors.WriteErrors(w, err)
 		return
 	}
 
 	http.Redirect(w, r, url.OriginalURL, http.StatusFound)
 
-	go func(){
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("recovered panic in click count goroutine: %v", r)
+			}
+		}()
 		ctx := context.Background()
 		if _, err := handler.service.IncrementClickCountService(ctx, url.ShortURL); err != nil {
 			log.Printf("failed to increment click count for %s: %v", shortURL, err)
@@ -108,7 +112,7 @@ func (handler *URLHandler) GetByOriginalURLHandler(w http.ResponseWriter, r *htt
 
 	url, err := handler.service.GetURLByOriginalURLService(r.Context(), originalURL)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		apperrors.WriteErrors(w, err)
 		return
 	}
 
@@ -127,7 +131,7 @@ func (handler *URLHandler) DeleteURLHandler(w http.ResponseWriter, r *http.Reque
 
 	success, err := handler.service.DeleteURLService(r.Context(), shortURL)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		apperrors.WriteErrors(w, err)
 		return
 	}
 
@@ -152,10 +156,10 @@ func (handler *URLHandler) GetClickCountHandler(w http.ResponseWriter, r *http.R
 
 	count, err := handler.service.GetClickCountsService(r.Context(), shortURL)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		apperrors.WriteErrors(w, err)
 		return
 	}
-	
+
 	response := struct {
 		Count int64 `json:"count"`
 	}{

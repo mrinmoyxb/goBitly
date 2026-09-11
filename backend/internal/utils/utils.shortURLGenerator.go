@@ -24,7 +24,7 @@ func ShortURLGenerator(length int64) string {
 // Phase 2 approach
 func reverseString(s string) string {
 	runes := []rune(s)
-	for i, j := 0, len(runes)-1; i<j; i, j = i+1, j-1 {
+	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
 		runes[i], runes[j] = runes[j], runes[i]
 	}
 	return string(runes)
@@ -48,7 +48,7 @@ func EncodeBase62(id int64) string {
 	for id > 0 {
 		remainder := id % base62Base
 		builder.WriteByte(characters[remainder])
-		id = id/base62Base
+		id = id / base62Base
 	}
 
 	encoded := reverseString(builder.String())

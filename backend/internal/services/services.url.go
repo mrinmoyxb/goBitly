@@ -22,7 +22,7 @@ func NewURLService(repo repository.URLRepository) *URLService {
 
 func (url *URLService) CreateShortURLService(ctx context.Context, userId int64, originalURL string) (*model.URL, error) {
 	if !utils.IsURLValidUtil(originalURL) {
-		return nil, errors.New("invalid URL")
+		return nil, apperrors.ErrInvalidURL
 	}
 
 	normalizedURL, err := utils.NormalizeURLUtil(originalURL)
@@ -38,13 +38,13 @@ func (url *URLService) CreateShortURLService(ctx context.Context, userId int64, 
 	if existingURL != nil {
 		return existingURL, nil
 	}
-	
+
 	return url.repo.CreateURLRepo(ctx, userId, normalizedURL)
 }
 
 func (url *URLService) GetURLByShortURLService(ctx context.Context, shortURL string) (*model.URL, error) {
 	existingURL, err := url.repo.GetURLByShortURLRepo(ctx, shortURL)
-	if err != nil && !errors.Is(err, apperrors.ErrURLNotFound){
+	if err != nil {
 		return nil, err
 	}
 
@@ -53,7 +53,7 @@ func (url *URLService) GetURLByShortURLService(ctx context.Context, shortURL str
 
 func (url *URLService) GetURLByOriginalURLService(ctx context.Context, originalURL string) (*model.URL, error) {
 	if !utils.IsURLValidUtil(originalURL) {
-		return nil, errors.New("invalid URL")
+		return nil, apperrors.ErrInvalidURL
 	}
 
 	normalizedURL, err := utils.NormalizeURLUtil(originalURL)
@@ -76,6 +76,9 @@ func (url *URLService) DeleteURLService(ctx context.Context, shortURL string) (b
 	success, err := url.repo.DeleteURLRepo(ctx, shortURL)
 	if err != nil {
 		return false, err
+	}
+	if !success {
+		return false, apperrors.ErrURLNotFound
 	}
 
 	return success, nil
